@@ -117,6 +117,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = ['http://agricalitresystem.azurewebsites.net']
 
 ROOT_URLCONF = 'sas.urls'
 
