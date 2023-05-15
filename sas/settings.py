@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '[::1]',
-    'agricalitresystem.azurewebsites.net', 
+    'fpsas.azurewebsites.net', 
 ]
 
 
@@ -130,7 +130,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS=True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ['https://agricalitresystem.azurewebsites.net']
+CSRF_TRUSTED_ORIGINS = ['https://fpsas.azurewebsites.net']
 
 
 
