@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'agricalitresystem'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_90509ACD3B39497EACD5163C39EDFAC5 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_30763931F9AD4CDC8F2078D13D1B4B3C }}
