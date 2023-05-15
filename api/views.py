@@ -1,19 +1,29 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserSerializer,RegisterSerializer
+from .serializers import UserSerializer,RegisterSerializer,CropSerializer,ChangePasswordSerializer
 from django.contrib.auth.models import User
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
-from .serializers import ChangePasswordSerializer
 from rest_framework.permissions import IsAuthenticated 
-from .models import Embedded,UserImage
-from .serializers import EmbeddedSerializer,ImgSerializer
-from rest_framework.decorators import api_view
-from django.shortcuts import redirect
+from .models import Embedded,Crops
+from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer
+from rest_framework.decorators import api_view,permission_classes
+from django.shortcuts import redirect,render
+from verify_email.email_handler import send_verification_email
+from django.contrib.auth.forms import UserCreationForm
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from rest_framework import views
+from rest_framework import permissions
+from rest_framework.response import Response
+from . import serializers
+from django.contrib.auth import login
+
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -27,8 +37,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         # ...
 
         return token
+
+
 class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class=MyTokenObtainPairSerializer    
+    permission_classes = (AllowAny,)
+    serializer_class = MyTokenObtainPairSerializer   
 
 
 
@@ -38,18 +51,32 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 # Class based view to Get User Details using Token Authentication
-class UserDetailAPI(APIView):
-  authentication_classes = (TokenObtainPairSerializer,)
-  permission_classes = (AllowAny,)
-  def get(self,request,*args,**kwargs):
-    user = User.objects.get(id=request.user.id)
-    serializer = UserSerializer(user)
-    return Response(serializer.data)
+class UserDetailAPI(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated,]
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
+
 
 #Class based view to register user
 class RegisterUserAPIView(generics.CreateAPIView):
   permission_classes = (AllowAny,)
   serializer_class = RegisterSerializer
+
+class APILogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        if self.request.data.get('all'):
+            token: OutstandingToken
+            for token in OutstandingToken.objects.filter(user=request.user):
+                _, _ = BlacklistedToken.objects.get_or_create(token=token)
+            return Response({"status": "OK, goodbye, all refresh tokens blacklisted"})
+        refresh_token = self.request.data.get('refresh_token')
+        token = RefreshToken(token=refresh_token)
+        token.blacklist()
+        return Response({"status": "OK, goodbye"})
 
 
 
@@ -102,7 +129,8 @@ def embeddedCreate(request):
      humidity=data['humidity'],
      light=data['light'],
      rainfall=data['rainfall'],
-     soil_moisture=data['soil_moisture']
+     soil_moisture=data['soil_moisture'],
+     pump_on=data['pump_on']
    )
    serializer = EmbeddedSerializer(embedded, many=False)
    return Response(serializer.data)
@@ -113,8 +141,8 @@ def embeddedViews(request):
    serializer = EmbeddedSerializer(embedded, many=True)
    return Response(serializer.data)
 @api_view(['GET'])
-def embeddedView(request,pk):
-   embedded = Embedded.objects.get(id=pk)
+def embeddedView(request):
+   embedded = Embedded.objects.order_by('-updated').first()
    serializer = EmbeddedSerializer(embedded, many=False)
    return Response(serializer.data)
 @api_view(['PUT'])
@@ -125,11 +153,25 @@ def embeddedUpdate(request,pk):
    if serializer.is_valid():
          serializer.save()
    return Response(serializer.data)
-@api_view(['DELETE'])
-def embeddedDelete(request,pk):
-   embedded = Embedded.objects.get(id=pk)
-   embedded.delete()
-   return Response('file is deleted')
+
+
+@api_view(['DELETE','GET'])
+def embeddedDelete(request):
+   if request.method == 'DELETE':
+    embedded = Embedded.objects.order_by('-updated').first()
+    embedded.delete()
+    return Response('file is deleted')
+   elif request.method == 'GET':
+       embedded = Embedded.objects.order_by('-updated').first()
+       serializer = EmbeddedSerializer(embedded, many=False)
+       return Response(serializer.data)
+
+@api_view(['GET'])
+def cropViews(request):
+    crop = Crops.objects.all()
+    serializer = CropSerializer(crop, many=True)
+    return Response(serializer.data)
+
 
 
 
@@ -142,13 +184,46 @@ def userImg(request):
             return redirect('success')
 
 def success(request):
-    return Response('successfully uploaded')      
+    return Response('successfully uploaded') 
 
-@api_view(['GET'])
-def imgViews(request):
-   imgView = UserImage.objects.all()
-   serializer = ImgSerializer(imgView)
-   return Response(serializer.data)
+
+
+def register_user(request):
+    form = UserCreationForm(request.POST or None)
+
+    if form.is_valid():
+
+        inactive_user = send_verification_email(request, form)
+        email= inactive_user.cleaned_data['email']
+        return Response(email)
+    return Response({'errors': form.errors})
+
+
+
+class UpdateProfileView(generics.UpdateAPIView):
+    model = User
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UpdateUserSerializer
+    def get_object(self):
+        return self.request.user
+
+
+class LoginView(views.APIView):
+    # This view should be accessible also for unauthenticated users.
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = serializers.LoginSerializer(data=self.request.data,
+            context={ 'request': self.request })
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        return Response(None, status=status.HTTP_202_ACCEPTED)
+
+
+
+    
 
 
 
