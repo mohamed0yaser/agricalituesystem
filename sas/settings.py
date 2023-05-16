@@ -32,7 +32,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '[::1]',
-    'fpsas.azurewebsites.net', 
+    'fpsas.azurewebsites.net',
+    '13.50.238.83',
 ]
 
 
