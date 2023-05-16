@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     '[::1]',
     'fpsas.azurewebsites.net',
     '13.50.238.83',
+    '0.0.0.0'
 ]
 
 
