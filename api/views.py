@@ -120,7 +120,7 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 
 
-
+@permission_classes(AllowAny,)
 @api_view(['POST'])
 def embeddedCreate(request):
    data = request.data
