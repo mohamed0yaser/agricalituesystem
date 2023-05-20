@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MyTokenObtainPairView,UserDetailAPI,RegisterUserAPIView,ChangePasswordView,UpdateProfileView,APILogoutView,LoginView,EmbeddedCreate
+from .views import MyTokenObtainPairView,UserDetailAPI,RegisterUserAPIView,ChangePasswordView,UpdateProfileView,APILogoutView,LoginView
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/sign_up/',RegisterUserAPIView.as_view()),
     path('api/change_password/', ChangePasswordView.as_view(), name='change_password'),
     path('api/embeddeds/',views.embeddedViews),
-    path('api/embedded/create/',EmbeddedCreate.as_view()),
+    path('api/embedded/create/',views.embeddedCreate),
     path('api/embedded/',views.embeddedView),
     path('api/embedded/update/',views.embeddedUpdate),
     path('api/embedded/delete/',views.embeddedDelete),
