@@ -126,15 +126,15 @@ class EmbeddedCreate(APIView):
   def post(self,request):
    serializer = serializers.EmbeddedSerializer(data=request.data)
    if serializer.is_valid():
-     data = {
+     
                 "temperature":serializer.data['temperature'],
                 "humidity":serializer.data['humidity'],
                 "light":serializer.data['light'],
                 "rainfall":serializer.data['rainfall'],
                 "soil_moisture":serializer.data['soil_moisture'],
                 "pump_on":serializer.data['pump_on']
-     }
-     return Response(data)
+     
+     return Response("temperature","humidity","light", "rainfall","soil_moisture", "pump_on")
    else:
        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
