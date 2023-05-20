@@ -120,23 +120,20 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 
 
-class EmbeddedCreate(APIView):
-  permission_classes = [permissions.AllowAny]
-  serializer_class = serializers.EmbeddedSerializer
-  def post(self,request):
-   serializer = serializers.EmbeddedSerializer(data=request.data)
-   if serializer.is_valid():
-     data={
-                "temperature":serializer.data['temperature'],
-                "humidity":serializer.data['humidity'],
-                "light":serializer.data['light'],
-                "rainfall":serializer.data['rainfall'],
-                "soil_moisture":serializer.data['soil_moisture'],
-                "pump_on":serializer.data['pump_on']
-     }
-     return Response(data)
-   else:
-       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def embeddedCreate(request):
+   data = request.data
+   embedded = Embedded.objects.create(
+     temperature=data['temperature'],
+     humidity=data['humidity'],
+     light=data['light'],
+     rainfall=data['rainfall'],
+     soil_moisture=data['soil_moisture'],
+     pump_on=data['pump_on']
+   )
+   serializer = EmbeddedSerializer(embedded, many=False)
+   return Response(serializer.data)
 
 @api_view(['GET'])
 def embeddedViews(request):
