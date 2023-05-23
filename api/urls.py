@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/embedded/update/',views.embeddedUpdate),
     path('api/embedded/delete/',views.embeddedDelete),
     path('api/uploadImage/',views.userImg),
+    path('api/viewImage/',views.userviewImg),
     path('api/update_profile/', UpdateProfileView.as_view(), name='auth_update_profile'),
     path('api/logout/',APILogoutView.as_view()),
     path('api/login/', LoginView.as_view()),
