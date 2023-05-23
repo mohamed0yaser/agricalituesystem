@@ -186,6 +186,13 @@ def userImg(request):
 def success(request):
     return Response('successfully uploaded') 
 
+@api_view(['GET'])
+def userviewImg(request):
+   if request.method == 'GET':
+      image = UserImg.object.order_by('name').first()
+      serializer = ImgSerializer(image , many=False)
+      return Response(serializer.data)
+
 
 
 def register_user(request):
