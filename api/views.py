@@ -9,7 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated 
-from .models import Embedded,Crops
+from .models import Embedded,Crops,UserImage
 from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer
 from rest_framework.decorators import api_view,permission_classes
 from django.shortcuts import redirect,render
