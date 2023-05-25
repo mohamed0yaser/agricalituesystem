@@ -9,16 +9,16 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated 
-from .models import Embedded,Crops,UserImage
-from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer
-from rest_framework.decorators import api_view,permission_classes
+from .models import Embedded,Crops,UserImage,SelectedCrop
+from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer,SelectedCropSerializer
+from rest_framework.decorators import api_view,permission_classes,parser_classes
 from django.shortcuts import redirect,render
 from verify_email.email_handler import send_verification_email
 from django.contrib.auth.forms import UserCreationForm
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from rest_framework import views
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import views,viewsets
 from rest_framework import permissions
 from rest_framework.response import Response
 from . import serializers
@@ -119,6 +119,27 @@ class ChangePasswordView(generics.UpdateAPIView):
     
 
 
+class EmbeddedCreate(APIView):
+    permission_classes=[AllowAny,]
+    serializer_class=serializers.EmbeddedSerializer
+    
+    def post(self,request):
+        serializer = serializers.EmbeddedSerializer(data=request.data)
+        if serializer.is_valid():
+         data = {
+            'temperature' : serializer.data.get('temperature'),
+            'humidity' : serializer.data.get('humidity'),
+            'light' : serializer.data.get('light'),
+            'rainfall' : serializer.data.get('rainfall'),
+            'soil_moisture' : serializer.data.get('soil_moisture'),
+            'pump_on' : serializer.data.get('pump_on')
+         }
+         return Response(data)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -146,9 +167,9 @@ def embeddedView(request):
    serializer = EmbeddedSerializer(embedded, many=False)
    return Response(serializer.data)
 @api_view(['PUT'])
-def embeddedUpdate(request,pk):
+def embeddedUpdate(request):
    data = request.data
-   embedded = Embedded.objects.get(id=pk)
+   embedded = Embedded.objects.order_by('-updated').first()
    serializer = EmbeddedSerializer(embedded, data=request.data)
    if serializer.is_valid():
          serializer.save()
@@ -172,26 +193,51 @@ def cropViews(request):
     serializer = CropSerializer(crop, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def selectedViews(request):
+    selected = SelectedCrop.objects.order_by('crop').first()
+    serializer = SelectedCropSerializer(selected, many=False)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def selectedUpdate(self,request):
+    self.object = self.get_object()
+    serializer = self.get_serializer(data=request.data)
+    if request.method == 'PUT':
+        queryset = SelectedCrop.objects.prefetch_related('crop').order_by('crop').first()
+        serializer = SelectedCropSerializer(queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,content_type='application/json')
+
+        
 
 
 
+
+class MyModelViewSet(viewsets.ModelViewSet):
+    queryset = UserImage.objects.order_by('-creation_date')
+    serializer_class = ImgSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [
+        permissions.AllowAny]
+    
+    
 @api_view(['POST'])
+#@parser_classes((MultiPartParser, FormParser))
+@permission_classes([AllowAny])
 def userImg(request):
    if request.method == 'POST':
-      serializer = ImgSerializer(request.POST, request.FILES)
+      serializer = ImgSerializer(data=request.data)
       if serializer.is_valid():
             serializer.save()
-            return redirect('success')
+            return Response(serializer.data)
 
 def success(request):
-    return Response('successfully uploaded') 
+    return Response('successfully uploaded')  
 
-@api_view(['GET'])
-def userviewImg(request):
-   if request.method == 'GET':
-      image = UserImage.objects.order_by('name').first()
-      serializer = ImgSerializer(image , many=False)
-      return Response(serializer.data)
+
 
 
 

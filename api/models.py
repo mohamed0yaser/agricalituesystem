@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 
@@ -21,18 +22,40 @@ class Embedded(models.Model):
         ordering = ['-updated']
 
 
-class UserImage(models.Model):
-    name = models.CharField(null=True, blank=True, max_length=50)
-    user_Img = models.ImageField(null=True, blank=True, upload_to='images/')
+# lets us explicitly set upload path and filename
+def upload_to(instance, filename):
+    return 'images/{filename}'.format(filename=filename)
 
+class UserImage(models.Model):
+    
+    image_url = models.ImageField(upload_to=upload_to, blank=True, null=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['-creation_date']
 
 class Crops(models.Model):
-    crop = models.CharField(max_length=255)
+    crop_name = models.CharField(max_length=255)
     soil_moisture_min=models.FloatField(max_length=255)
     soil_moisture_max=models.FloatField(max_length=255)
     
     def __str__(self):
+        return f"{self.crop_name}{self.soil_moisture_min}{self.soil_moisture_max}"
+
+class SelectedCrop(models.Model):
+    crop = models.OneToOneField(Crops, on_delete=models.CASCADE)
+    soil_moisture_min=models.FloatField(auto_created=True)
+    soil_moisture_max=models.FloatField(auto_created=True)
+    
+
+    def get_soil_moisture_min(self):
+        return self.crop.soil_moisture_min
+    
+    def get_soil_moisture_max(self):
+        return self.crop.soil_moisture_max
+
+    def __str__(self):
         return f"{self.crop}{self.soil_moisture_min}{self.soil_moisture_max}"
+
 
 
 

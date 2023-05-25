@@ -2,20 +2,21 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
-from .models import Embedded, UserImage,Crops
+from .models import Embedded, UserImage,Crops,SelectedCrop
 from rest_framework.serializers import ModelSerializer
-from django import forms
 from django.contrib.auth import authenticate
 
 
 
 
 
-class ImgSerializer(forms.ModelForm):
- 
+class ImgSerializer(serializers.ModelSerializer):
+
+    image_url = serializers.ImageField(required=False)
+
     class Meta:
         model = UserImage
-        fields = ['user_Img']
+        fields = '__all__'
 
 #Serializer to Get User Details using Django Token Authentication
 class UserSerializer(serializers.ModelSerializer):
@@ -125,8 +126,21 @@ class EmbeddedSerializer(ModelSerializer):
 class CropSerializer(ModelSerializer):
    class Meta:
       model = Crops
-      fields = ['crop','soil_moisture_min','soil_moisture_max']
+      fields = ['crop_name','soil_moisture_min','soil_moisture_max']
+      
 
+class SelectedCropSerializer(ModelSerializer):
+   soil_moisture_min = serializers.ReadOnlyField()
+   soil_moisture_max = serializers.ReadOnlyField()
+   class Meta:
+      model = SelectedCrop
+      fields = ['soil_moisture_min','soil_moisture_max']
+      read_only_fields = ('soil_moisture_min', 'soil_moisture_max')
+   def pre_save(self, instance):
+        if instance.crop_id:
+            crop = Crops.objects.get(id=instance.crop_id)
+            instance.soil_moisture_min = crop.soil_moisture_min
+            instance.soil_moisture_max = crop.soil_moisture_max
 
 
 
