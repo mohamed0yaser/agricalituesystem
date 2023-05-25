@@ -188,6 +188,7 @@ def embeddedDelete(request):
        return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def cropViews(request):
     crop = Crops.objects.all()
     serializer = CropSerializer(crop, many=True)
