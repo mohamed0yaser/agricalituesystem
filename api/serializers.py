@@ -16,7 +16,7 @@ class ImgSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserImage
-        fields = '__all__'
+        fields = ['image_url']
 
 #Serializer to Get User Details using Django Token Authentication
 class UserSerializer(serializers.ModelSerializer):
