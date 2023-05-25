@@ -224,12 +224,13 @@ class MyModelViewSet(viewsets.ModelViewSet):
         permissions.AllowAny]
     
     
-@api_view(['POST'])
+@api_view(['PUT'])
 #@parser_classes((MultiPartParser, FormParser))
 @permission_classes([AllowAny])
 def userImg(request):
-   if request.method == 'POST':
-      serializer = ImgSerializer(data=request.data)
+   if request.method == 'PUT':
+      queryset = UserImage.objects.order_by('-creation_date').first()
+      serializer = ImgSerializer(queryset, many=False, data=request.data)
       if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
