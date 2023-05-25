@@ -153,16 +153,19 @@ def embeddedCreate(request):
    return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def embeddedViews(request):
    embedded = Embedded.objects.all()
    serializer = EmbeddedSerializer(embedded, many=True)
    return Response(serializer.data)
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def embeddedView(request):
    embedded = Embedded.objects.order_by('-updated').first()
    serializer = EmbeddedSerializer(embedded, many=False)
    return Response(serializer.data)
 @api_view(['PUT'])
+@permission_classes([AllowAny])
 def embeddedUpdate(request):
    data = request.data
    embedded = Embedded.objects.order_by('-updated').first()
@@ -173,6 +176,7 @@ def embeddedUpdate(request):
 
 
 @api_view(['DELETE','GET'])
+@permission_classes([AllowAny])
 def embeddedDelete(request):
    if request.method == 'DELETE':
     embedded = Embedded.objects.order_by('-updated').first()
