@@ -157,35 +157,15 @@ def embeddedCreate(request):
 def embeddedViews(request):
    embedded = Embedded.objects.all()
    serializer = EmbeddedSerializer(embedded, many=True)
-   return Response(serializer.data)
+   return Response({"embedded":serializer.data})
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def embeddedView(request):
    embedded = Embedded.objects.order_by('-updated').first()
    serializer = EmbeddedSerializer(embedded, many=False)
-   return Response(serializer.data)
-@api_view(['PUT'])
-@permission_classes([AllowAny])
-def embeddedUpdate(request):
-   data = request.data
-   embedded = Embedded.objects.order_by('-updated').first()
-   serializer = EmbeddedSerializer(embedded, data=request.data)
-   if serializer.is_valid():
-         serializer.save()
-   return Response(serializer.data)
+   return Response({"embedded":serializer.data})
 
 
-@api_view(['DELETE','GET'])
-@permission_classes([AllowAny])
-def embeddedDelete(request):
-   if request.method == 'DELETE':
-    embedded = Embedded.objects.order_by('-updated').first()
-    embedded.delete()
-    return Response('file is deleted')
-   elif request.method == 'GET':
-       embedded = Embedded.objects.order_by('-updated').first()
-       serializer = EmbeddedSerializer(embedded, many=False)
-       return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
