@@ -72,12 +72,6 @@ def User_logout(request):
 
 
 
-    if request.user.is_authenticated:
-        logout(request)
-
-    return Response('User Logged out successfully')
-
-
 class ChangePasswordView(generics.UpdateAPIView):
     """
     An endpoint for changing password.
