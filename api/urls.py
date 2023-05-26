@@ -22,6 +22,9 @@ urlpatterns = [
     path('api/cropView/',views.cropViews),
     path('api/select/',views.selectedViews),
     path('api/selectup/',views.selectedUpdate),
+<<<<<<< HEAD
     path('api/reportML/',views.report_create),
     path('api/reportF/',views.report_view),
+=======
+>>>>>>> 0ba7acbfd11fe00267bdf1e4d4e11b79860c1284
 ]

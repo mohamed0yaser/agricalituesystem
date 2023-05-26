@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserSerializer,RegisterSerializer,CropSerializer,ChangePasswordSerializer
 from django.contrib.auth.models import User
+from django.contrib.auth import logout
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
@@ -56,6 +57,17 @@ class RegisterUserAPIView(generics.CreateAPIView):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def User_logout(request):
+<<<<<<< HEAD
+=======
+
+    if request.user.is_authenticated:
+        logout(request)
+
+    return Response('User Logged out successfully')
+
+
+
+>>>>>>> 0ba7acbfd11fe00267bdf1e4d4e11b79860c1284
 
     if request.user.is_authenticated:
         logout(request)
@@ -125,16 +137,6 @@ def embeddedView(request):
    return Response({"embedded":serializer.data})
 
 
-@api_view(['DELETE','GET'])
-def embeddedDelete(request):
-   if request.method == 'DELETE':
-    embedded = Embedded.objects.order_by('-updated').first()
-    embedded.delete()
-    return Response('file is deleted')
-   elif request.method == 'GET':
-       embedded = Embedded.objects.order_by('-updated').first()
-       serializer = EmbeddedSerializer(embedded, many=False)
-       return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -172,7 +174,7 @@ class MyModelViewSet(viewsets.ModelViewSet):
         permissions.AllowAny]
     
     
-@api_view(['POST'])
+@api_view(['PUT'])
 #@parser_classes((MultiPartParser, FormParser))
 @permission_classes([AllowAny])
 def userImg(request):
