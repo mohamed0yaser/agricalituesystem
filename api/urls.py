@@ -19,7 +19,7 @@ urlpatterns = [
     path('api/update_profile/', UpdateProfileView.as_view(), name='auth_update_profile'),
     path('api/logout/',views.User_logout),
     path('api/login/', LoginView.as_view()),
-    path('api/cropView/<int:pk>/',views.cropViews),
+    path('api/cropView/',views.cropViews),
     path('api/select/',views.selectedViews),
     path('api/selectup/',views.selectedUpdate),
     path('api/reportML/',views.report_create),

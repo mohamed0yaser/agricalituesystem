@@ -16,7 +16,7 @@ class ImgSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserImage
-        fields = '__all__'
+        fields = ['image_url']
 
 #Serializer to Get User Details using Django Token Authentication
 class UserSerializer(serializers.ModelSerializer):
@@ -166,9 +166,3 @@ class LoginSerializer(serializers.Serializer):
         # It will be used in the view.
         attrs['user'] = user
         return attrs
-   
-
-class ReportSerializer(serializers.ModelSerializer):
-   class Meta:
-      model = ReportPlant
-      fields = '__all__'

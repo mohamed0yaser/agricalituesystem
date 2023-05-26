@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserSerializer,RegisterSerializer,CropSerializer,ChangePasswordSerializer
 from django.contrib.auth.models import User
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated 
@@ -124,7 +125,19 @@ def embeddedView(request):
    return Response({"embedded":serializer.data})
 
 
+@api_view(['DELETE','GET'])
+def embeddedDelete(request):
+   if request.method == 'DELETE':
+    embedded = Embedded.objects.order_by('-updated').first()
+    embedded.delete()
+    return Response('file is deleted')
+   elif request.method == 'GET':
+       embedded = Embedded.objects.order_by('-updated').first()
+       serializer = EmbeddedSerializer(embedded, many=False)
+       return Response(serializer.data)
+
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def cropViews(request):
     crop = Crops.objects.all()
     serializer = CropSerializer(crop, many=True)
@@ -160,10 +173,12 @@ class MyModelViewSet(viewsets.ModelViewSet):
     
     
 @api_view(['POST'])
+#@parser_classes((MultiPartParser, FormParser))
 @permission_classes([AllowAny])
 def userImg(request):
-   if request.method == 'POST':
-      serializer = ImgSerializer(data=request.data)
+   if request.method == 'PUT':
+      queryset = UserImage.objects.order_by('-creation_date').first()
+      serializer = ImgSerializer(queryset, many=False, data=request.data)
       if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

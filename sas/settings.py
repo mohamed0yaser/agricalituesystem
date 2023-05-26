@@ -32,9 +32,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '[::1]',
-    'agricalitresystem.azurewebsites.net',
-    '13.49.102.193'
-    
+    'agricalitresystem.azurewebsites.net', 
 ]
 
 
