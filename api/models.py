@@ -43,23 +43,20 @@ class Crops(models.Model):
 
 class SelectedCrop(models.Model):
     crop = models.OneToOneField(Crops, on_delete=models.CASCADE)
-    soil_moisture_min=models.FloatField(auto_created=True)
-    soil_moisture_max=models.FloatField(auto_created=True)
+    soil_moisture_min=models.FloatField(max_length=255)
+    soil_moisture_max=models.FloatField(max_length=255)
     
     def __str__(self):
         return f"{self.crop}{self.soil_moisture_min}{self.soil_moisture_max}"
-    
+
 
 class ReportPlant(models.Model):
-    predicted_plant = models.CharField(max_length=255)
+    plant_name = models.CharField(max_length=255)
     confidence = models.FloatField(max_length=255)
     description = models.TextField(max_length=255)
 
     def __str__(self):
-        return f"{self.predicted_plant}"
-
-
-
+        return f"{self.plant_name}"
 
 
 

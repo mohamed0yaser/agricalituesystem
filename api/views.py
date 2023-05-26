@@ -1,11 +1,11 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserSerializer,RegisterSerializer,CropSerializer,ChangePasswordSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
-from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated 
@@ -17,9 +17,8 @@ from django.contrib.auth.forms import UserCreationForm
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import views,viewsets
 from rest_framework import permissions
-from rest_framework.response import Response
 from . import serializers
-from django.contrib.auth import login,logout
+from django.contrib.auth import login
 
 
 
@@ -29,7 +28,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        # Add custom claims
         token['username'] = user.username
+        # ...
 
         return token
 
@@ -42,6 +43,10 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 
+
+
+
+# Class based view to Get User Details using Token Authentication
 class UserDetailAPI(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated,]
     serializer_class = UserSerializer
@@ -50,6 +55,7 @@ class UserDetailAPI(generics.RetrieveAPIView):
         return self.request.user
 
 
+#Class based view to register user
 class RegisterUserAPIView(generics.CreateAPIView):
   permission_classes = (AllowAny,)
   serializer_class = RegisterSerializer
@@ -57,8 +63,6 @@ class RegisterUserAPIView(generics.CreateAPIView):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def User_logout(request):
-<<<<<<< HEAD
-=======
 
     if request.user.is_authenticated:
         logout(request)
@@ -67,12 +71,6 @@ def User_logout(request):
 
 
 
->>>>>>> 0ba7acbfd11fe00267bdf1e4d4e11b79860c1284
-
-    if request.user.is_authenticated:
-        logout(request)
-
-    return Response('User Logged out successfully')
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
@@ -91,8 +89,10 @@ class ChangePasswordView(generics.UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
+            # Check old password
             if not self.object.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            # set_password also hashes the password that the user will get
             self.object.set_password(serializer.data.get("new_password"))
             self.object.save()
             response = {
@@ -107,6 +107,9 @@ class ChangePasswordView(generics.UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+
+
+        
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -128,7 +131,7 @@ def embeddedCreate(request):
 def embeddedViews(request):
    embedded = Embedded.objects.all()
    serializer = EmbeddedSerializer(embedded, many=True)
-   return Response({"embedded":serializer.data})
+   return Response({"embeddeds":serializer.data})
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def embeddedView(request):
@@ -137,13 +140,12 @@ def embeddedView(request):
    return Response({"embedded":serializer.data})
 
 
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def cropViews(request):
     crop = Crops.objects.all()
     serializer = CropSerializer(crop, many=True)
-    return Response({"crop":serializer.data})
+    return Response({"crops":serializer.data})
 
 @api_view(['GET'])
 def selectedViews(request):
@@ -154,16 +156,16 @@ def selectedViews(request):
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 def selectedUpdate(self,request):
-    self.object = self.get_object()
-    serializer = self.get_serializer(data=request.data)
     if request.method == 'PUT':
         queryset = SelectedCrop.objects.prefetch_related('crop').order_by('crop').first()
         serializer = SelectedCropSerializer(queryset, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,content_type='application/json')
+            return Response(serializer.data)
 
         
+
+
 
 
 class MyModelViewSet(viewsets.ModelViewSet):
@@ -175,12 +177,11 @@ class MyModelViewSet(viewsets.ModelViewSet):
     
     
 @api_view(['PUT'])
-#@parser_classes((MultiPartParser, FormParser))
 @permission_classes([AllowAny])
 def userImg(request):
    if request.method == 'PUT':
       queryset = UserImage.objects.order_by('-creation_date').first()
-      serializer = ImgSerializer(queryset, many=False, data=request.data)
+      serializer = ImgSerializer(queryset, many=False, data=request.data,)
       if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -214,6 +215,7 @@ class UpdateProfileView(generics.UpdateAPIView):
 
 
 class LoginView(views.APIView):
+    # This view should be accessible also for unauthenticated users.
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -224,26 +226,24 @@ class LoginView(views.APIView):
         login(request, user)
         return Response(None, status=status.HTTP_202_ACCEPTED)
 
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def report_create(request):
-    data = request.data
-    report = ReportPlant.objects.create(
-        predicted_plant=data['predicted_plant'],
-        confidence=data['confidence'],
-        description=data['description'],
-    )
-    serializer = ReportSerializer(report, many=False)
-    return Response(serializer.data)
+   data = request.data
+   report = ReportPlant.objects.create(
+      plant_name=data['plant_name'],
+      confidence=data['confidence'],
+      description=data['description'],
+   )
+   serializer = ReportSerializer(report, many=False)
+   return Response(serializer.data)    
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def report_view(request):
+def report_views(request):
    report = ReportPlant.objects.all()
    serializer = ReportSerializer(report, many=True)
-   return Response({"report":serializer.data})
-    
-
-
-
+   return Response({"Reports":serializer.data})

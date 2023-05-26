@@ -68,6 +68,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     model = User
 
+    """
+    Serializer for password change endpoint.
+    """
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
@@ -127,11 +130,17 @@ class CropSerializer(ModelSerializer):
       
 
 class SelectedCropSerializer(ModelSerializer):
-
+   soil_moisture_min = serializers.ReadOnlyField()
+   soil_moisture_max = serializers.ReadOnlyField()
    class Meta:
       model = SelectedCrop
       fields = ['soil_moisture_min','soil_moisture_max']
       read_only_fields = ('soil_moisture_min', 'soil_moisture_max')
+   def pre_save(self, instance):
+        if instance.crop_id:
+            crop = Crops.objects.get(id=instance.crop_id)
+            instance.soil_moisture_min = crop.soil_moisture_min
+            instance.soil_moisture_max = crop.soil_moisture_max
 
 
 
@@ -166,3 +175,9 @@ class LoginSerializer(serializers.Serializer):
         # It will be used in the view.
         attrs['user'] = user
         return attrs
+
+
+class ReportSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = ReportPlant
+      fields = '__all__'
