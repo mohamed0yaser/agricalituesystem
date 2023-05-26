@@ -148,6 +148,7 @@ def cropViews(request):
     return Response({"crops":serializer.data})
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def selectedViews(request):
     selected = SelectedCrop.objects.order_by('crop').first()
     serializer = SelectedCropSerializer(selected, many=False)
