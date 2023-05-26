@@ -48,7 +48,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 # Class based view to Get User Details using Token Authentication
 class UserDetailAPI(generics.RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
 
     def get_object(self):
