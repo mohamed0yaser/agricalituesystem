@@ -71,6 +71,13 @@ def User_logout(request):
 
 
 
+<<<<<<< HEAD
+=======
+    if request.user.is_authenticated:
+        logout(request)
+
+    return Response('User Logged out successfully')
+>>>>>>> 5d6d5654f81e72f09a71b99887dfb91eec0acf38
 
 class ChangePasswordView(generics.UpdateAPIView):
     """

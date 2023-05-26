@@ -175,9 +175,19 @@ class LoginSerializer(serializers.Serializer):
         # It will be used in the view.
         attrs['user'] = user
         return attrs
+<<<<<<< HEAD
 
 
 class ReportSerializer(serializers.ModelSerializer):
    class Meta:
       model = ReportPlant
       fields = '__all__'
+=======
+    
+    
+    
+class ReportSerializer(serializers,ModelSerializer):
+    class Meta:
+        model = ReportPlant
+        fields = '__all__'
+>>>>>>> 5d6d5654f81e72f09a71b99887dfb91eec0acf38
