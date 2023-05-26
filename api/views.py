@@ -57,8 +57,6 @@ class RegisterUserAPIView(generics.CreateAPIView):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def User_logout(request):
-<<<<<<< HEAD
-=======
 
     if request.user.is_authenticated:
         logout(request)
@@ -66,8 +64,6 @@ def User_logout(request):
     return Response('User Logged out successfully')
 
 
-
->>>>>>> 0ba7acbfd11fe00267bdf1e4d4e11b79860c1284
 
     if request.user.is_authenticated:
         logout(request)
