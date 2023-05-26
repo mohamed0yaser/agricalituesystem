@@ -46,15 +46,18 @@ class SelectedCrop(models.Model):
     soil_moisture_min=models.FloatField(auto_created=True)
     soil_moisture_max=models.FloatField(auto_created=True)
     
-
-    def get_soil_moisture_min(self):
-        return self.crop.soil_moisture_min
-    
-    def get_soil_moisture_max(self):
-        return self.crop.soil_moisture_max
-
     def __str__(self):
         return f"{self.crop}{self.soil_moisture_min}{self.soil_moisture_max}"
+    
+
+class ReportPlant(models.Model):
+    predicted_plant = models.CharField(max_length=255)
+    confidence = models.FloatField(max_length=255)
+    description = models.TextField(max_length=255)
+
+    def __str__(self):
+        return f"{self.predicted_plant}"
+
 
 
 

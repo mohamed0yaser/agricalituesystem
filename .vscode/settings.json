@@ -1,6 +1,6 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "ms-python.python"
     },
     "python.formatting.provider": "none",
     "appService.defaultWebAppToDeploy": "/subscriptions/2d4acffb-2301-4aa0-a80c-e44774973f7e/resourceGroups/smartagricalituresystem_group/providers/Microsoft.Web/sites/smartagricalituresystem",

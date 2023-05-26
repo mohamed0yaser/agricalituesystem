@@ -7,7 +7,6 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('api.urls')),
-    path('api-token-auth', views.obtain_auth_token),
-    path('verification/', include('verify_email.urls')),
+    path('verification/', include('api.urls')),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

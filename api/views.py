@@ -1,28 +1,23 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserSerializer,RegisterSerializer,CropSerializer,ChangePasswordSerializer
 from django.contrib.auth.models import User
-from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated 
-from .models import Embedded,Crops,UserImage,SelectedCrop
-from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer,SelectedCropSerializer
-from rest_framework.decorators import api_view,permission_classes,parser_classes
-from django.shortcuts import redirect,render
+from .models import Embedded,Crops,UserImage,SelectedCrop,ReportPlant
+from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer,SelectedCropSerializer,ReportSerializer
+from rest_framework.decorators import api_view,permission_classes
 from verify_email.email_handler import send_verification_email
 from django.contrib.auth.forms import UserCreationForm
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import views,viewsets
 from rest_framework import permissions
 from rest_framework.response import Response
 from . import serializers
-from django.contrib.auth import login
+from django.contrib.auth import login,logout
 
 
 
@@ -32,9 +27,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
-        # Add custom claims
         token['username'] = user.username
-        # ...
 
         return token
 
@@ -47,10 +40,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 
-
-
-
-# Class based view to Get User Details using Token Authentication
 class UserDetailAPI(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated,]
     serializer_class = UserSerializer
@@ -59,29 +48,18 @@ class UserDetailAPI(generics.RetrieveAPIView):
         return self.request.user
 
 
-#Class based view to register user
 class RegisterUserAPIView(generics.CreateAPIView):
   permission_classes = (AllowAny,)
   serializer_class = RegisterSerializer
 
-class APILogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def User_logout(request):
 
-    def post(self, request, *args, **kwargs):
-        if self.request.data.get('all'):
-            token: OutstandingToken
-            for token in OutstandingToken.objects.filter(user=request.user):
-                _, _ = BlacklistedToken.objects.get_or_create(token=token)
-            return Response({"status": "OK, goodbye, all refresh tokens blacklisted"})
-        refresh_token = self.request.data.get('refresh_token')
-        token = RefreshToken(token=refresh_token)
-        token.blacklist()
-        return Response({"status": "OK, goodbye"})
+    if request.user.is_authenticated:
+        logout(request)
 
-
-
-
-
+    return Response('User Logged out successfully')
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
@@ -100,10 +78,8 @@ class ChangePasswordView(generics.UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            # Check old password
             if not self.object.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            # set_password also hashes the password that the user will get
             self.object.set_password(serializer.data.get("new_password"))
             self.object.save()
             response = {
@@ -117,28 +93,6 @@ class ChangePasswordView(generics.UpdateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
-
-class EmbeddedCreate(APIView):
-    permission_classes=[AllowAny,]
-    serializer_class=serializers.EmbeddedSerializer
-    
-    def post(self,request):
-        serializer = serializers.EmbeddedSerializer(data=request.data)
-        if serializer.is_valid():
-         data = {
-            'temperature' : serializer.data.get('temperature'),
-            'humidity' : serializer.data.get('humidity'),
-            'light' : serializer.data.get('light'),
-            'rainfall' : serializer.data.get('rainfall'),
-            'soil_moisture' : serializer.data.get('soil_moisture'),
-            'pump_on' : serializer.data.get('pump_on')
-         }
-         return Response(data)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
-
 
 
 @api_view(['POST'])
@@ -157,41 +111,24 @@ def embeddedCreate(request):
    return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def embeddedViews(request):
    embedded = Embedded.objects.all()
    serializer = EmbeddedSerializer(embedded, many=True)
-   return Response(serializer.data)
+   return Response({"embedded":serializer.data})
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def embeddedView(request):
    embedded = Embedded.objects.order_by('-updated').first()
    serializer = EmbeddedSerializer(embedded, many=False)
-   return Response(serializer.data)
-@api_view(['PUT'])
-def embeddedUpdate(request):
-   data = request.data
-   embedded = Embedded.objects.order_by('-updated').first()
-   serializer = EmbeddedSerializer(embedded, data=request.data)
-   if serializer.is_valid():
-         serializer.save()
-   return Response(serializer.data)
+   return Response({"embedded":serializer.data})
 
-
-@api_view(['DELETE','GET'])
-def embeddedDelete(request):
-   if request.method == 'DELETE':
-    embedded = Embedded.objects.order_by('-updated').first()
-    embedded.delete()
-    return Response('file is deleted')
-   elif request.method == 'GET':
-       embedded = Embedded.objects.order_by('-updated').first()
-       serializer = EmbeddedSerializer(embedded, many=False)
-       return Response(serializer.data)
 
 @api_view(['GET'])
 def cropViews(request):
     crop = Crops.objects.all()
     serializer = CropSerializer(crop, many=True)
-    return Response(serializer.data)
+    return Response({"crop":serializer.data})
 
 @api_view(['GET'])
 def selectedViews(request):
@@ -214,8 +151,6 @@ def selectedUpdate(self,request):
         
 
 
-
-
 class MyModelViewSet(viewsets.ModelViewSet):
     queryset = UserImage.objects.order_by('-creation_date')
     serializer_class = ImgSerializer
@@ -225,7 +160,6 @@ class MyModelViewSet(viewsets.ModelViewSet):
     
     
 @api_view(['POST'])
-#@parser_classes((MultiPartParser, FormParser))
 @permission_classes([AllowAny])
 def userImg(request):
    if request.method == 'POST':
@@ -263,7 +197,6 @@ class UpdateProfileView(generics.UpdateAPIView):
 
 
 class LoginView(views.APIView):
-    # This view should be accessible also for unauthenticated users.
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -274,8 +207,25 @@ class LoginView(views.APIView):
         login(request, user)
         return Response(None, status=status.HTTP_202_ACCEPTED)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def report_create(request):
+    data = request.data
+    report = ReportPlant.objects.create(
+        predicted_plant=data['predicted_plant'],
+        confidence=data['confidence'],
+        description=data['description'],
+    )
+    serializer = ReportSerializer(report, many=False)
+    return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def report_view(request):
+   report = ReportPlant.objects.all()
+   serializer = ReportSerializer(report, many=True)
+   return Response({"report":serializer.data})
     
 
 
