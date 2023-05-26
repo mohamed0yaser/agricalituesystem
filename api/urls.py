@@ -25,4 +25,4 @@ urlpatterns = [
     path('api/reportML/',views.report_create),
     path('api/reportF/',views.report_views),
     path('api/reportF/',views.report_view),
-
+]
