@@ -8,17 +8,20 @@ from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from rest_framework import generics
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated 
+from rest_framework.permissions import IsAuthenticated
 from .models import Embedded,Crops,UserImage,SelectedCrop,ReportPlant
 from .serializers import EmbeddedSerializer,ImgSerializer,UpdateUserSerializer,SelectedCropSerializer,ReportSerializer
 from rest_framework.decorators import api_view,permission_classes
-from verify_email.email_handler import send_verification_email
-from django.contrib.auth.forms import UserCreationForm
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import views,viewsets
 from rest_framework import permissions
 from . import serializers
 from django.contrib.auth import login
+from .authentication import CsrfExemptSessionAuthentication
+
+
+
+
 
 
 
@@ -48,7 +51,8 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 # Class based view to Get User Details using Token Authentication
 class UserDetailAPI(generics.RetrieveAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    permission_classes = [AllowAny]
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -57,8 +61,9 @@ class UserDetailAPI(generics.RetrieveAPIView):
 
 #Class based view to register user
 class RegisterUserAPIView(generics.CreateAPIView):
-  permission_classes = (AllowAny,)
   serializer_class = RegisterSerializer
+  authentication_classes = (CsrfExemptSessionAuthentication,)
+  permission_classes = [AllowAny]
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -78,7 +83,8 @@ class ChangePasswordView(generics.UpdateAPIView):
     """
     serializer_class = ChangePasswordSerializer
     model = User
-    permission_classes = (IsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    permission_classes = [AllowAny]
 
     def get_object(self, queryset=None):
         obj = self.request.user
@@ -154,9 +160,11 @@ def selectedViews(request):
     serializer = SelectedCropSerializer(selected, many=False)
     return Response(serializer.data)
 
-@api_view(['PUT'])
-@permission_classes([AllowAny])
-def selectedUpdate(self,request):
+
+class SelectedUpdate(APIView):
+  authentication_classes = (CsrfExemptSessionAuthentication,)
+  permission_classes = [AllowAny]
+  def put(self,request):
     if request.method == 'PUT':
         queryset = SelectedCrop.objects.prefetch_related('crop').order_by('crop').first()
         serializer = SelectedCropSerializer(queryset, data=request.data)
@@ -177,9 +185,11 @@ class MyModelViewSet(viewsets.ModelViewSet):
         permissions.AllowAny]
     
     
-@api_view(['PUT'])
-@permission_classes([AllowAny])
-def userImg(request):
+
+class UserImg(APIView):
+ authentication_classes = (CsrfExemptSessionAuthentication,) 
+ permission_classes = [AllowAny]
+ def put(self,request):
    if request.method == 'PUT':
       queryset = UserImage.objects.order_by('-creation_date').first()
       serializer = ImgSerializer(queryset, many=False, data=request.data,)
@@ -187,29 +197,19 @@ def userImg(request):
             serializer.save()
             return Response(serializer.data)
 
-def success(request):
+ def success(self,request):
     return Response('successfully uploaded')  
 
 
 
 
 
-def register_user(request):
-    form = UserCreationForm(request.POST or None)
-
-    if form.is_valid():
-
-        inactive_user = send_verification_email(request, form)
-        email= inactive_user.cleaned_data['email']
-        return Response(email)
-    return Response({'errors': form.errors})
-
-
 
 class UpdateProfileView(generics.UpdateAPIView):
     model = User
     queryset = User.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [AllowAny]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     serializer_class = UpdateUserSerializer
     def get_object(self):
         return self.request.user
@@ -218,6 +218,7 @@ class UpdateProfileView(generics.UpdateAPIView):
 class LoginView(views.APIView):
     # This view should be accessible also for unauthenticated users.
     permission_classes = (permissions.AllowAny,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self, request):
         serializer = serializers.LoginSerializer(data=self.request.data,
@@ -241,10 +242,12 @@ def report_create(request):
    serializer = ReportSerializer(report, many=False)
    return Response(serializer.data)    
 
+class ReportViews(views.APIView):
+  authentication_classes = (CsrfExemptSessionAuthentication,)
+  permission_classes = [AllowAny]
+  def get(self,request):
+    report = ReportPlant.objects.all()
+    serializer = ReportSerializer(report, many=True)
+    return Response({"Reports":serializer.data})
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def report_views(request):
-   report = ReportPlant.objects.all()
-   serializer = ReportSerializer(report, many=True)
-   return Response({"Reports":serializer.data})
+
