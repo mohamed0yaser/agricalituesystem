@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class Embedded(models.Model):
     temperature=models.FloatField(max_length=255)
     humidity=models.FloatField(max_length=255)
-    light=models.FloatField(max_length=255)
+    light=models.CharField(max_length=255)
     rainfall=models.FloatField(max_length=255)
     soil_moisture=models.FloatField(max_length=255)
     updated = models.DateTimeField(auto_now=True)
