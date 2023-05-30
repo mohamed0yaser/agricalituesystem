@@ -189,9 +189,9 @@ class MyModelViewSet(viewsets.ModelViewSet):
 class UserImg(APIView):
  authentication_classes = (CsrfExemptSessionAuthentication,) 
  permission_classes = [AllowAny]
- def put(self,request):
+ def put(self,request,pk):
    if request.method == 'PUT':
-      queryset = UserImage.objects.order_by('-creation_date').first()
+      queryset = UserImage.objects.get(id=pk)
       serializer = ImgSerializer(queryset, many=False, data=request.data,)
       if serializer.is_valid():
             serializer.save()
