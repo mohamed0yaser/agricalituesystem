@@ -15,7 +15,7 @@ urlpatterns = [
     path('api/embedded/create/',views.embeddedCreate),
     path('api/embedded/',views.embeddedView),
     path('api/uploadImage/',MyModelViewSet.as_view({'get':'list'})),
-    path('api/uploadedImage/',UserImg.as_view()),
+    path('api/uploadedImage/<str:pk>/',UserImg.as_view()),
     path('api/update_profile/', UpdateProfileView.as_view(), name='auth_update_profile'),
     path('api/logout/',views.User_logout),
     path('api/login/', LoginView.as_view()),
