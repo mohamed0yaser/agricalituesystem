@@ -196,7 +196,7 @@ class UserImg(APIView):
       serializer = ImgSerializer(queryset, many=False, data=request.data,)
       if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data,content_type='image/jpeg')
 
  def success(self,request):
     return Response('successfully uploaded')  
