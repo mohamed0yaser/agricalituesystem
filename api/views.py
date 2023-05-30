@@ -189,6 +189,7 @@ class MyModelViewSet(viewsets.ModelViewSet):
 class UserImg(APIView):
  authentication_classes = (CsrfExemptSessionAuthentication,) 
  permission_classes = [AllowAny]
+ parser_classes = [MultiPartParser,FormParser]
  def put(self,request,pk):
    if request.method == 'PUT':
       queryset = UserImage.objects.get(id=pk)
